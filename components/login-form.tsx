@@ -125,12 +125,7 @@ export function LoginForm({
               <div className="grid gap-3">
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
+                 
                 </div>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
@@ -181,17 +176,10 @@ export function LoginForm({
                 >
                   {loading ? 'Signing In...' : 'Login'}
                 </Button>
-                <Button variant="outline" className="w-full" disabled={loading}>
-                  Login with Google
-                </Button>
+                
               </div>
             </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <a href="#" className="underline underline-offset-4">
-                Sign up
-              </a>
-            </div>
+            
           </form>
         </CardContent>
       </Card>

@@ -40,6 +40,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   MoreHorizontal,
   Plus,
   Search,
@@ -170,13 +178,10 @@ function StaffCRUD() {
         axiosInstance.get('/user'),
         axiosInstance.get('/ministry'),
       ]);
-
       setStaff(Array.isArray(staffResponse.data) ? staffResponse.data : staffResponse.data?.data || []);
       setUsers(Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data?.data || []);
       setMinistries(Array.isArray(ministriesResponse.data) ? ministriesResponse.data : ministriesResponse.data?.data || []);
-      toast.success('Data loaded successfully', { icon: '✅' });
     } catch (error) {
-      toast.error('Failed to fetch data', { icon: '❌' });
       console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
@@ -392,12 +397,17 @@ function StaffCRUD() {
     }
   };
 
-  const getEmploymentIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'full-time': return <Briefcase className="h-4 w-4" />;
-      case 'part-time': return <Briefcase className="h-4 w-4" />;
-      case 'volunteer': return <Heart className="h-4 w-4" />;
-      default: return <Briefcase className="h-4 w-4" />;
+  const getEmploymentIcon = (type?: string) => {
+    const normalizedType = typeof type === 'string' ? type.toLowerCase() : 'default';
+    switch (normalizedType) {
+      case 'full-time':
+        return <Briefcase className="h-4 w-4" />;
+      case 'part-time':
+        return <Briefcase className="h-4 w-4" />;
+      case 'volunteer':
+        return <Heart className="h-4 w-4" />;
+      default:
+        return <Briefcase className="h-4 w-4" />;
     }
   };
 
@@ -405,24 +415,35 @@ function StaffCRUD() {
     return isActive ? 'default' : 'secondary';
   };
 
-  const StaffCardSkeleton = () => (
-    <Card className="relative overflow-hidden transition-all duration-300 hover:shadow-md">
-      <CardHeader className="flex flex-row justify-between items-start pb-3">
-        <div className="space-y-2">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-20" />
-        </div>
-        <Skeleton className="h-8 w-8 rounded-full" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-4 w-full mb-2" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex justify-between items-center mt-4">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="h-8 w-20 rounded-md" />
-        </div>
-      </CardContent>
-    </Card>
+  const StaffTableSkeleton = () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Position</TableHead>
+          <TableHead>Ministry</TableHead>
+          <TableHead>Employment Type</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Hire Date</TableHead>
+          <TableHead>Salary</TableHead>
+          <TableHead>Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <TableRow key={i}>
+            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+            <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 
   return (
@@ -548,99 +569,96 @@ function StaffCRUD() {
         </CardContent>
       </Card>
 
-      {/* Grid of Staff */}
+      {/* Table of Staff */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <StaffCardSkeleton key={i} />
-          ))}
-        </div>
+        <StaffTableSkeleton />
       ) : filteredStaff.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredStaff.map((staffMember) => (
-            <Card
-              key={staffMember.staff_id}
-              className="relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <CardHeader className="flex flex-row justify-between items-start pb-3">
-                <div>
-                  <CardTitle className="text-xl">
-                    {staffMember.user?.first_name} {staffMember.user?.last_name}
-                  </CardTitle>
-                  <div className="flex items-center gap-2 mt-2">
-                    {getEmploymentIcon(staffMember.employment_type)}
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Position</TableHead>
+                <TableHead className="font-semibold">Ministry</TableHead>
+                <TableHead className="font-semibold">Employment Type</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold">Hire Date</TableHead>
+                <TableHead className="font-semibold">Salary</TableHead>
+                <TableHead className="font-semibold">Qualifications</TableHead>
+                <TableHead className="font-semibold">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredStaff.map((staffMember) => (
+                <TableRow
+                  key={staffMember.staff_id}
+                  className="hover:bg-muted/30 transition-colors duration-200"
+                >
+                  <TableCell className="font-medium">
+                    {staffMember.first_name} {staffMember.last_name}
+                    <div className="text-sm text-muted-foreground">{staffMember.user?.email}</div>
+                  </TableCell>
+                  <TableCell>{staffMember.position}</TableCell>
+                  {/* <TableCell>{staffMember.ministry?.name || 'No ministry assigned'}</TableCell> */}
+                  {/* <TableCell>{ministries.filter((min) => {min.ministry_id === staffMember.ministry_id})[0]}</TableCell> */}
+                  <TableCell>{ministries.find(min => min.ministry_id === staffMember.ministry_id)?.name || 'No ministry assigned'}</TableCell>                  <TableCell>
                     <Badge variant={getEmploymentVariant(staffMember.employment_type)} className="flex items-center gap-1">
+                      {getEmploymentIcon(staffMember.employment_type)}
                       {staffMember.employment_type}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={getStatusVariant(staffMember.is_active)}>
                       {staffMember.is_active ? 'Active' : 'Inactive'}
                     </Badge>
-                  </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="opacity-70 group-hover:opacity-100 transition-opacity">
-                      <MoreHorizontal className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => openEditModal(staffMember)}>
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openQualificationModal(staffMember)}>
-                      Add Qualification
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => openDeleteConfirm(staffMember)}
-                    >
-                      {staffMember.is_active ? 'Deactivate' : 'Delete'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground line-clamp-2 mb-2">
-                  {staffMember.position} at {staffMember.ministry?.name || 'No ministry assigned'}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Email: {staffMember.user?.email}
-                </p>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Salary: {formatCurrency(staffMember.salary)}
-                </p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {staffMember.qualifications && staffMember.qualifications.length > 0 ? (
-                    staffMember.qualifications.slice(0, 2).map((qual, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {qual.name} ({qual.type})
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">No qualifications</span>
-                  )}
-                  {staffMember.qualifications && staffMember.qualifications.length > 2 && (
-                    <span className="text-xs text-muted-foreground">
-                      +{staffMember.qualifications.length - 2} more
-                    </span>
-                  )}
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-muted-foreground">
-                    Hired: {formatDate(staffMember.hire_date)}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openEditModal(staffMember)}
-                  >
-                    Manage
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  </TableCell>
+                  <TableCell>{formatDate(staffMember.hire_date)}</TableCell>
+                  <TableCell>{staffMember.salary} ETB</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-2">
+                      {staffMember.qualifications && staffMember.qualifications.length > 0 ? (
+                        staffMember.qualifications.slice(0, 2).map((qual, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {qual.name} ({qual.type})
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No qualifications</span>
+                      )}
+                      {staffMember.qualifications && staffMember.qualifications.length > 2 && (
+                        <span className="text-xs text-muted-foreground">
+                          +{staffMember.qualifications.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="hover:bg-muted rounded-full">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditModal(staffMember)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openQualificationModal(staffMember)}>
+                          Add Qualification
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => openDeleteConfirm(staffMember)}
+                        >
+                          {staffMember.is_active ? 'Deactivate' : 'Delete'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <Card className="text-center py-12">
@@ -662,8 +680,8 @@ function StaffCRUD() {
 
       {/* Main Staff Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl transition-all duration-300">
-          <DialogHeader className="p-8 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-primary/10 to-transparent">
+        <DialogContent className="max-h-[95vh] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl transition-all duration-300">
+          <DialogHeader className="p-8 border-b border-gray-200 dark:border-gray-700">
             <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {editingStaff ? 'Edit Staff Member' : 'Add New Staff Member'}
             </DialogTitle>
@@ -673,7 +691,7 @@ function StaffCRUD() {
                 : 'Add a new staff member to your church community.'}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-8 space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="p-2 space-y-8">
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -700,11 +718,17 @@ function StaffCRUD() {
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
                           {users && users.length > 0 ? (
-                            users.map((user) => (
-                              <SelectItem key={user.user_id} value={user.user_id.toString()} className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                                {user.first_name} {user.last_name} ({user.email})
-                              </SelectItem>
-                            ))
+                            users
+                              .filter(user => user.user_type === 'Staff' && !staff.some(staffMember => staffMember.user_id === user.user_id))
+                              .map(user => (
+                                <SelectItem
+                                  key={user.user_id}
+                                  value={user.user_id.toString()}
+                                  className="hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                  {user.first_name} {user.last_name} ({user.email})
+                                </SelectItem>
+                              ))
                           ) : (
                             <SelectItem value="0" disabled>
                               No users available
@@ -827,7 +851,7 @@ function StaffCRUD() {
                     className="w-full rounded-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 transition-all duration-200 hover:ring-2 hover:ring-primary/50"
                     placeholder="e.g. 50000"
                   />
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Enter annual salary in USD (optional).</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Enter monthly salary in ETB (optional).</p>
                 </div>
 
                 <div className="space-y-2">

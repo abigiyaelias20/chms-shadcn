@@ -133,6 +133,8 @@ function MinistryCRUD() {
     try {
       setIsLoading(true);
       const res = await axiosInstance.get("/ministry");
+
+      console.log("Fetched ministries:", res.data); 
       // Add mock member count for demonstration
       const ministriesWithMembers = (res.data || []).map((ministry: Ministry) => ({
         ...ministry,
@@ -312,7 +314,7 @@ function MinistryCRUD() {
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-600 font-medium">Music Ministries</p>
+              <p className="text-sm text-green-600 font-medium">Worship Ministries</p>
               <p className="text-2xl font-bold">{ministries.filter(m => m.type === 'Music').length}</p>
             </div>
             <div className="p-3 rounded-full bg-green-200">
@@ -323,8 +325,8 @@ function MinistryCRUD() {
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm text-purple-600 font-medium">Youth Ministries</p>
-              <p className="text-2xl font-bold">{ministries.filter(m => m.type === 'Youth').length}</p>
+              <p className="text-sm text-purple-600 font-medium">Pastoral Ministries</p>
+              <p className="text-2xl font-bold">{ministries.filter(m => m.type === 'Spiritual').length}</p>
             </div>
             <div className="p-3 rounded-full bg-purple-200">
               <Sparkles className="h-6 w-6 text-purple-600" />
@@ -334,10 +336,9 @@ function MinistryCRUD() {
         <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-600 font-medium">Total Members</p>
-              <p className="text-2xl font-bold">
-                {ministries.reduce((acc, ministry) => acc + (ministry.member_count || 0), 0)}
-              </p>
+              <p className="text-sm text-amber-600 font-medium">Youth Ministries</p>
+                            <p className="text-2xl font-bold">{ministries.filter(m => m.type === 'Youth').length}</p>
+
             </div>
             <div className="p-3 rounded-full bg-amber-200">
               <Heart className="h-6 w-6 text-amber-600" />

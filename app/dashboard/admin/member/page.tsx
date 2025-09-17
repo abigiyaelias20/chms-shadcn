@@ -80,6 +80,7 @@ interface User {
   phone?: string;
   date_of_birth?: string;
   address?: string;
+  user_type: string;
 }
 
 interface Family {
@@ -166,24 +167,23 @@ export default function MemberCRUD() {
 
       // Set state individually based on success/failure
       if (results[0].status === 'fulfilled') {
-        setMembers(results[0].value.data.data);
-        console.log("Members Data",results[0].value.data.data)
+        setMembers(results[0].value.data.data || []);
+        console.log("Members Data", results[0].value.data.data)
       }
-      else toast.error('Failed to load members');
+      else { console.error('Failed to load members'); toast.error('Failed to load members'); };
 
       if (results[1].status === 'fulfilled') {
-        const usersData = results[1].value.data.data;
-        console.log("USERS DATA", usersData)
-        setUsers(usersData.filter((user: any) => user.user_type === 'Member'));
+        const usersData = results[1].value.data.data || [];
+        setUsers(usersData.filter((user: User) => user.user_type === 'Member'));
       } else {
         toast.error('Failed to load users');
       }
 
-      if (results[2].status === 'fulfilled') setFamilies(results[2].value.data);
-      else toast.error('Failed to load families');
+      if (results[2].status === 'fulfilled') setFamilies(results[2].value.data || []);
+      else console.error('Failed to load families');
 
-      if (results[3].status === 'fulfilled') setTeams(results[3].value.data);
-      else toast.error('Failed to load teams');
+      if (results[3].status === 'fulfilled') setTeams(results[3].value.data || []);
+      else console.error('Failed to load teams');
 
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -244,6 +244,7 @@ export default function MemberCRUD() {
         toast.success('Member created successfully');
       }
       closeModal();
+      loadData(); // Reload to ensure users are updated if needed
     } catch (error) {
       toast.error('Failed to save member');
       console.error('Error saving member:', error);
@@ -387,22 +388,24 @@ export default function MemberCRUD() {
       <AppSidebar variant='inset' />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-col gap-6 p-6">
+        <div className="container mx-auto flex flex-col gap-6 p-6 animate-fade-in">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Member Management</h1>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                Member Management
+              </h1>
               <p className="text-muted-foreground">
                 Manage church members, their details, and team participation
               </p>
             </div>
-            <Button onClick={openCreateModal} className="gap-2">
+            <Button onClick={openCreateModal} className="gap-2 shadow-md hover:shadow-lg transition-shadow duration-200">
               <UserPlus className="h-4 w-4" />
               Add New Member
             </Button>
           </div>
 
           {/* Filters */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -417,7 +420,7 @@ export default function MemberCRUD() {
                 <div className="grid gap-2 flex-1">
                   <Label htmlFor="status-filter">Membership Status</Label>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger id="status-filter">
+                    <SelectTrigger id="status-filter" className="focus:ring-2 focus:ring-blue-500 transition-shadow">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -433,7 +436,7 @@ export default function MemberCRUD() {
                 <div className="grid gap-2 flex-1">
                   <Label htmlFor="team-filter">Team Participation</Label>
                   <Select value={filterTeam} onValueChange={setFilterTeam}>
-                    <SelectTrigger id="team-filter">
+                    <SelectTrigger id="team-filter" className="focus:ring-2 focus:ring-blue-500 transition-shadow">
                       <SelectValue placeholder="Select team filter" />
                     </SelectTrigger>
                     <SelectContent>
@@ -448,7 +451,7 @@ export default function MemberCRUD() {
           </Card>
 
           {/* Members Table */}
-          <Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
             <CardHeader>
               <CardTitle>Members</CardTitle>
               <CardDescription>
@@ -456,132 +459,133 @@ export default function MemberCRUD() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Membership</TableHead>
-                    <TableHead>Family</TableHead>
-                    <TableHead>Teams</TableHead>
-                    <TableHead>Spiritual Gifts</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMembers.map((member) => (
-                    <TableRow key={member.member_id}>
-                      <TableCell>
-                        <div className="font-medium">
-                          {member.first_name} {member.last_name}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {member.user?.email}
-                        </div>
-                        {member.user?.phone && (
-                          <div className="text-sm text-muted-foreground">
-                            {member.user.phone}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Badge variant={getStatusVariant(member.membership_status)}>
-                            {member.membership_status}
-                          </Badge>
-                          <div className="text-xs text-muted-foreground">
-                            Joined: {formatDate(member.join_date)}
-                          </div>
-                          {member.baptism_date && (
-                            <div className="text-xs text-muted-foreground">
-                              Baptized: {formatDate(member.baptism_date)}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {member.family ? (
-                          <>
-                            <div className="font-medium">{member.family.family_name}</div>
-                            <div className="text-xs text-muted-foreground capitalize">
-                              {member.family_relationship}
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-muted-foreground">No family</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {member.team_participation && member.team_participation.filter(t => t.is_active).length > 0 ? (
-                            member.team_participation.filter(t => t.is_active).map(team => {
-                              const teamInfo = teams.find(t => t.team_id === team.team_id);
-                              return (
-                                <div key={team.team_id} className="flex items-center justify-between gap-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {teamInfo?.name} ({team.role})
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeTeamParticipation(member.member_id, team.team_id)}
-                                    className="h-6 w-6 p-0"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <span className="text-muted-foreground text-sm">No teams</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-
-                        <div className="flex flex-wrap gap-1">
-                          {Array.isArray(member.spiritual_gifts) && member.spiritual_gifts.length > 0 ? (
-                            member.spiritual_gifts.map(gift => (
-                              <Badge key={gift} variant="secondary" className="text-xs">
-                                {gift}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-muted-foreground text-sm">No gifts listed</span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => openEditModal(member)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openTeamModal(member)}>
-                              <Users className="mr-2 h-4 w-4" />
-                              Manage Teams
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => openDeleteConfirm(member)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              <div className="rounded-lg border overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Member</TableHead>
+                      <TableHead>Membership</TableHead>
+                      <TableHead>Family</TableHead>
+                      <TableHead>Teams</TableHead>
+                      <TableHead>Spiritual Gifts</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredMembers.map((member) => (
+                      <TableRow key={member.member_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
+                        <TableCell>
+                          <div className="font-medium">
+                            {member.user?.first_name} {member.user?.last_name}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {member.user?.email}
+                          </div>
+                          {member.user?.phone && (
+                            <div className="text-sm text-muted-foreground">
+                              {member.user.phone}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <Badge variant={getStatusVariant(member.membership_status)}>
+                              {member.membership_status}
+                            </Badge>
+                            <div className="text-xs text-muted-foreground">
+                              Joined: {formatDate(member.join_date)}
+                            </div>
+                            {member.baptism_date && (
+                              <div className="text-xs text-muted-foreground">
+                                Baptized: {formatDate(member.baptism_date)}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {member.family ? (
+                            <>
+                              <div className="font-medium">{member.family.family_name}</div>
+                              <div className="text-xs text-muted-foreground capitalize">
+                                {member.family_relationship}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-muted-foreground">No family</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {member.team_participation && member.team_participation.filter(t => t.is_active).length > 0 ? (
+                              member.team_participation.filter(t => t.is_active).map(team => {
+                                const teamInfo = teams.find(t => t.team_id === team.team_id);
+                                return (
+                                  <div key={team.team_id} className="flex items-center justify-between gap-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {teamInfo?.name} ({team.role})
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeTeamParticipation(member.member_id, team.team_id)}
+                                      className="h-6 w-6 p-0 hover:bg-red-100 dark:hover:bg-red-900 transition-colors"
+                                    >
+                                      <Trash2 className="h-3 w-3 text-red-500" />
+                                    </Button>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No teams</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {Array.isArray(member.spiritual_gifts) && member.spiritual_gifts.length > 0 ? (
+                              member.spiritual_gifts.map(gift => (
+                                <Badge key={gift} variant="secondary" className="text-xs">
+                                  {gift}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No gifts listed</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="shadow-lg rounded-md">
+                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuItem onClick={() => openEditModal(member)} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => openTeamModal(member)} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <Users className="mr-2 h-4 w-4" />
+                                Manage Teams
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => openDeleteConfirm(member)}
+                                className="text-destructive hover:bg-red-50 dark:hover:bg-red-900"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
               {filteredMembers.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <Users className="h-12 w-12 text-muted-foreground mb-4" />
@@ -592,7 +596,7 @@ export default function MemberCRUD() {
                   <Button onClick={() => {
                     setFilterStatus('all');
                     setFilterTeam('all');
-                  }}>
+                  }} className="shadow-md hover:shadow-lg transition-shadow duration-200">
                     Clear filters
                   </Button>
                 </div>
@@ -602,56 +606,59 @@ export default function MemberCRUD() {
 
           {/* Create/Edit Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-0">
+              <DialogHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                   {editingMember ? 'Edit Member' : 'Add New Member'}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-muted-foreground">
                   {editingMember ? 'Update member details' : 'Add a new member to the church database'}
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-6">
                   <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                      <TabsTrigger value="family">Family</TabsTrigger>
-                      <TabsTrigger value="spiritual">Spiritual</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                      <TabsTrigger value="basic" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900">Basic Info</TabsTrigger>
+                      <TabsTrigger value="family" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900">Family</TabsTrigger>
+                      <TabsTrigger value="spiritual" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900">Spiritual</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="basic" className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="user_id"
-                        rules={{ required: "User is required" }}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>User *</FormLabel>
-                            <Select
-                              value={field.value?.toString()}
-                              onValueChange={(value) => field.onChange(parseInt(value))}
-                              disabled={!!editingMember}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a user" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {users.map((user) => (
-                                  <SelectItem key={user.user_id} value={user.user_id.toString()}>
-                                    {user.first_name} {user.last_name} ({user.email})
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <TabsContent value="basic" className="mt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="user_id"
+                          rules={{ required: "User is required" }}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>User *</FormLabel>
+                              <Select
+                                value={field.value?.toString()}
+                                onValueChange={(value) => field.onChange(parseInt(value))}
+                                disabled={!!editingMember}
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
+                                    <SelectValue placeholder="Select a user" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="max-h-60 overflow-y-auto">
+                                  {users.filter(user => !members.some(m => m.user_id === user.user_id)).map((user) => (
+                                    <SelectItem key={user.user_id} value={user.user_id.toString()} className="hover:bg-gray-100 dark:hover:bg-gray-700">
+                                      {user.first_name} {user.last_name} ({user.email})
+                                    </SelectItem>
+                                  ))}
+                                  {users.filter(user => !members.some(m => m.user_id === user.user_id)).length === 0 && (
+                                    <SelectItem value="0" disabled>No available users</SelectItem>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="membership_status"
@@ -661,7 +668,7 @@ export default function MemberCRUD() {
                               <FormLabel>Membership Status *</FormLabel>
                               <Select value={field.value} onValueChange={field.onChange}>
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
                                     <SelectValue placeholder="Select status" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -685,31 +692,31 @@ export default function MemberCRUD() {
                             <FormItem>
                               <FormLabel>Join Date</FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input type="date" {...field} className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="baptism_date"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Baptism Date</FormLabel>
+                              <FormControl>
+                                <Input type="date" {...field} className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
-
-                      <FormField
-                        control={form.control}
-                        name="baptism_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Baptism Date</FormLabel>
-                            <FormControl>
-                              <Input type="date" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </TabsContent>
 
-                    <TabsContent value="family" className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <TabsContent value="family" className="mt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
                           name="family_id"
@@ -721,14 +728,14 @@ export default function MemberCRUD() {
                                 onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
                               >
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
                                     <SelectValue placeholder="Select a family" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="0">No family</SelectItem>
                                   {families.map((family) => (
-                                    <SelectItem key={family.family_id} value={family.family_id.toString()}>
+                                    <SelectItem key={family.family_id} value={family.family_id.toString()} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                                       {family.family_name}
                                     </SelectItem>
                                   ))}
@@ -747,7 +754,7 @@ export default function MemberCRUD() {
                               <FormLabel>Family Relationship</FormLabel>
                               <Select value={field.value} onValueChange={field.onChange}>
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
                                     <SelectValue placeholder="Select relationship" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -767,64 +774,67 @@ export default function MemberCRUD() {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="spiritual" className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="spiritual_gifts"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Spiritual Gifts</FormLabel>
-                            <div className="grid grid-cols-2 gap-2">
-                              {spiritualGiftsOptions.map((gift) => (
-                                <div key={gift} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={gift}
-                                    checked={field.value?.includes(gift)}
-                                    onCheckedChange={(checked) => {
-                                      const currentGifts = field.value || [];
-                                      if (checked) {
-                                        field.onChange([...currentGifts, gift]);
-                                      } else {
-                                        field.onChange(currentGifts.filter(g => g !== gift));
-                                      }
-                                    }}
-                                  />
-                                  <Label htmlFor={gift} className="text-sm font-normal">
-                                    {gift}
-                                  </Label>
-                                </div>
-                              ))}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <TabsContent value="spiritual" className="mt-6">
+                      <div className="space-y-6">
+                        <FormField
+                          control={form.control}
+                          name="spiritual_gifts"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Spiritual Gifts</FormLabel>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {spiritualGiftsOptions.map((gift) => (
+                                  <div key={gift} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={gift}
+                                      checked={field.value?.includes(gift)}
+                                      onCheckedChange={(checked) => {
+                                        const currentGifts = field.value || [];
+                                        if (checked) {
+                                          field.onChange([...currentGifts, gift]);
+                                        } else {
+                                          field.onChange(currentGifts.filter(g => g !== gift));
+                                        }
+                                      }}
+                                      className="rounded-md border-2 border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-colors"
+                                    />
+                                    <Label htmlFor={gift} className="text-sm font-normal capitalize">
+                                      {gift}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Additional notes about the member..."
-                                className="resize-none"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                        <FormField
+                          control={form.control}
+                          name="notes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Notes</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  placeholder="Additional notes about the member..."
+                                  className="min-h-[120px] w-full resize-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </TabsContent>
                   </Tabs>
 
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={closeModal}>
+                  <DialogFooter className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                    <Button type="button" variant="outline" onClick={closeModal} className="rounded-lg hover:shadow-md transition-shadow duration-200">
                       Cancel
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
                       {editingMember ? 'Update' : 'Create'} Member
                     </Button>
                   </DialogFooter>
@@ -835,17 +845,17 @@ export default function MemberCRUD() {
 
           {/* Team Management Modal */}
           <Dialog open={teamModalOpen} onOpenChange={setTeamModalOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>
+            <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-0">
+              <DialogHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <DialogTitle className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Manage Teams for {selectedMemberForTeam?.user?.first_name} {selectedMemberForTeam?.user?.last_name}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className="text-muted-foreground">
                   Add or update team participation for this member
                 </DialogDescription>
               </DialogHeader>
               <Form {...teamForm}>
-                <form onSubmit={teamForm.handleSubmit(onTeamSubmit)} className="space-y-4">
+                <form onSubmit={teamForm.handleSubmit(onTeamSubmit)} className="p-6 space-y-6">
                   <FormField
                     control={teamForm.control}
                     name="team_id"
@@ -858,13 +868,13 @@ export default function MemberCRUD() {
                           onValueChange={(value) => field.onChange(parseInt(value))}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
                               <SelectValue placeholder="Select a team" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="max-h-60 overflow-y-auto">
                             {teams.map((team) => (
-                              <SelectItem key={team.team_id} value={team.team_id.toString()}>
+                              <SelectItem key={team.team_id} value={team.team_id.toString()} className="hover:bg-gray-100 dark:hover:bg-gray-700">
                                 {team.name}
                               </SelectItem>
                             ))}
@@ -884,7 +894,7 @@ export default function MemberCRUD() {
                         <FormLabel>Role *</FormLabel>
                         <Select value={field.value} onValueChange={field.onChange}>
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full focus:ring-2 focus:ring-blue-500 transition-shadow">
                               <SelectValue placeholder="Select a role" />
                             </SelectTrigger>
                           </FormControl>
@@ -899,11 +909,11 @@ export default function MemberCRUD() {
                     )}
                   />
 
-                  <DialogFooter>
-                    <Button type="button" variant="outline" onClick={() => setTeamModalOpen(false)}>
+                  <DialogFooter className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                    <Button type="button" variant="outline" onClick={() => setTeamModalOpen(false)} className="rounded-lg hover:shadow-md transition-shadow duration-200">
                       Cancel
                     </Button>
-                    <Button type="submit">
+                    <Button type="submit" className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
                       Add to Team
                     </Button>
                   </DialogFooter>
@@ -914,14 +924,14 @@ export default function MemberCRUD() {
 
           {/* Delete Confirmation Modal */}
           <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Confirm Deletion</DialogTitle>
-                <DialogDescription>
+            <DialogContent className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-0">
+              <DialogHeader className="p-6 border-b border-gray-200 dark:border-gray-700">
+                <DialogTitle className="text-xl font-bold text-red-600">Confirm Deletion</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   This action cannot be undone. This will permanently delete the member record.
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
+              <div className="p-6">
                 <p className="text-sm text-muted-foreground">
                   Are you sure you want to delete{" "}
                   <span className="font-medium">
@@ -930,11 +940,12 @@ export default function MemberCRUD() {
                   ? All associated data will be removed.
                 </p>
               </div>
-              <DialogFooter>
+              <DialogFooter className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDeleteConfirmOpen(false)}
+                  className="rounded-lg hover:shadow-md transition-shadow duration-200"
                 >
                   Cancel
                 </Button>
@@ -942,6 +953,7 @@ export default function MemberCRUD() {
                   type="button"
                   variant="destructive"
                   onClick={confirmDelete}
+                  className="rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200"
                 >
                   Delete Member
                 </Button>

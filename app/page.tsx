@@ -119,7 +119,7 @@ export default function ChurchHomepage() {
 
       <div className="min-h-screen w-full overflow-x-hidden">
         {/* Navigation Bar */}
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 py-2 shadow-sm' : 'py-4'}`}>
+        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-2 shadow-sm' : 'py-4 bg-white'}`}>
           <div className="container mx-auto px-4 flex justify-between items-center">
             <motion.div 
               className="flex items-center cursor-pointer"
@@ -127,10 +127,10 @@ export default function ChurchHomepage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="bg-primary text-primary-foreground w-10 h-10 rounded-md flex items-center justify-center mr-2">
+              <div className="bg-[#2C5F8B] text-white w-10 h-10 rounded-md flex items-center justify-center mr-2">
                 <FaCross size={20} />
               </div>
-              <span className="font-bold text-xl font-serif text-primary">Grace Community</span>
+              <span className="font-bold text-xl font-serif text-[#2C5F8B]">Grace Community</span>
             </motion.div>
             
             <div className="hidden md:flex items-center space-x-1">
@@ -138,7 +138,7 @@ export default function ChurchHomepage() {
                 <Button
                   key={item.id}
                   variant={activeSection === item.id ? "secondary" : "ghost"}
-                  className={`flex flex-col items-center h-14 px-3 ${activeSection === item.id ? 'bg-primary/10' : ''}`}
+                  className={`flex flex-col items-center h-14 px-3 ${activeSection === item.id ? 'bg-[#2C5F8B]/10 text-[#2C5F8B]' : 'text-gray-600 hover:text-[#2C5F8B]'}`}
                   onClick={() => scrollToSection(item.id)}
                 >
                   <span className="mb-1">{item.icon}</span>
@@ -150,13 +150,13 @@ export default function ChurchHomepage() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="md:hidden"
+              className="md:hidden text-gray-600"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <div className="space-y-1.5">
-                <span className={`block h-0.5 w-6 bg-foreground transition-all ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-                <span className={`block h-0.5 w-6 bg-foreground ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-                <span className={`block h-0.5 w-6 bg-foreground transition-all ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+                <span className={`block h-0.5 w-6 bg-current transition-all ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+                <span className={`block h-0.5 w-6 bg-current ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+                <span className={`block h-0.5 w-6 bg-current transition-all ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
               </div>
             </Button>
           </div>
@@ -166,7 +166,7 @@ export default function ChurchHomepage() {
         <AnimatePresence>
           {isMobileMenuOpen && (
             <motion.div 
-              className="fixed top-16 inset-x-0 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60 z-40 md:hidden"
+              className="fixed top-16 inset-x-0 bg-white/95 backdrop-blur-lg supports-[backdrop-filter]:bg-white/60 z-40 md:hidden"
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -178,7 +178,7 @@ export default function ChurchHomepage() {
                     <Button
                       key={item.id}
                       variant={activeSection === item.id ? "secondary" : "ghost"}
-                      className="justify-start"
+                      className={`justify-start ${activeSection === item.id ? 'bg-[#2C5F8B]/10 text-[#2C5F8B]' : 'text-gray-600'}`}
                       onClick={() => scrollToSection(item.id)}
                     >
                       <span className="mr-2">{item.icon}</span>
@@ -194,7 +194,7 @@ export default function ChurchHomepage() {
         {/* Hero Section */}
         <section 
           id="home" 
-          className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-background to-muted/50"
+          className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-white to-gray-100/50"
           ref={el => sectionRefs.current['home'] = el}
         >
           <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
@@ -205,16 +205,16 @@ export default function ChurchHomepage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="text-primary font-serif font-bold text-xl mb-4">Grace Community Church</div>
-              <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6">Welcome to Our Spiritual Home</h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+              <div className="text-[#2C5F8B] font-serif font-bold text-xl mb-4">Grace Community Church</div>
+              <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-gray-800">Welcome to Our Spiritual Home</h1>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10">
                 Where faith, community, and love come together in worship
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" onClick={() => scrollToSection('services')}>
+                <Button size="lg" className="bg-[#2C5F8B] hover:bg-[#2C5F8B]/90" onClick={() => scrollToSection('services')}>
                   Join Us for Service
                 </Button>
-                <Button variant="outline" size="lg" onClick={() => scrollToSection('about')}>
+                <Button variant="outline" size="lg" className="text-[#2C5F8B] border-[#2C5F8B] hover:bg-[#2C5F8B]/10" onClick={() => scrollToSection('about')}>
                   Learn More
                 </Button>
               </div>
@@ -222,7 +222,7 @@ export default function ChurchHomepage() {
           </div>
 
           <motion.div 
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-muted-foreground"
+            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-500"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -235,13 +235,13 @@ export default function ChurchHomepage() {
         {/* About Section */}
         <section 
           id="about" 
-          className="py-20 bg-muted/30"
+          className="py-20 bg-gray-100/30"
           ref={el => sectionRefs.current['about'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">About Our Church</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">About Our Church</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 A community of faith, hope, and love serving together since 1952
               </p>
             </div>
@@ -255,13 +255,13 @@ export default function ChurchHomepage() {
               >
                 <Card className="h-full text-center border-0 shadow-lg">
                   <CardHeader>
-                    <div className="bg-primary/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaCross size={24} className="text-primary" />
+                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FaCross size={24} className="text-[#2C5F8B]" />
                     </div>
-                    <CardTitle>Our Mission</CardTitle>
+                    <CardTitle className="text-[#2C5F8B]">Our Mission</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>To spread the love of Christ, nurture spiritual growth, and serve our community with compassion and grace.</p>
+                    <p className="text-gray-600">To spread the love of Christ, nurture spiritual growth, and serve our community with compassion and grace.</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -274,13 +274,13 @@ export default function ChurchHomepage() {
               >
                 <Card className="h-full text-center border-0 shadow-lg">
                   <CardHeader>
-                    <div className="bg-primary/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaBook size={24} className="text-primary" />
+                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FaBook size={24} className="text-[#2C5F8B]" />
                     </div>
-                    <CardTitle>Our History</CardTitle>
+                    <CardTitle className="text-[#2C5F8B]">Our History</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>Founded in 1952, Grace Community Church has been a cornerstone of faith in our community for generations.</p>
+                    <p className="text-gray-600">Founded in 1952, Grace Community Church has been a cornerstone of faith in our community for generations.</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -293,13 +293,13 @@ export default function ChurchHomepage() {
               >
                 <Card className="h-full text-center border-0 shadow-lg">
                   <CardHeader>
-                    <div className="bg-primary/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaChurch size={24} className="text-primary" />
+                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FaChurch size={24} className="text-[#2C5F8B]" />
                     </div>
-                    <CardTitle>Our Beliefs</CardTitle>
+                    <CardTitle className="text-[#2C5F8B]">Our Beliefs</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p>We believe in the Holy Trinity, salvation through Jesus Christ, the power of prayer, and the importance of community.</p>
+                    <p className="text-gray-600">We believe in the Holy Trinity, salvation through Jesus Christ, the power of prayer, and the importance of community.</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -310,13 +310,13 @@ export default function ChurchHomepage() {
         {/* Services Section */}
         <section 
           id="services" 
-          className="py-20"
+          className="py-20 bg-white"
           ref={el => sectionRefs.current['services'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Worship Services</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Worship Services</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 Join us for worship and fellowship throughout the week
               </p>
             </div>
@@ -331,15 +331,15 @@ export default function ChurchHomepage() {
                   viewport={{ once: true }}
                 >
                   <Card className="h-full text-center border-0 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-4 right-4 bg-primary text-primary-foreground w-12 h-12 rounded-full flex items-center justify-center shadow-md">
+                    <div className="absolute top-4 right-4 bg-[#2C5F8B] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md">
                       <FaChurch size={18} />
                     </div>
                     <CardHeader>
-                      <div className="text-2xl font-bold text-primary mb-2">{service.time}</div>
-                      <CardTitle>{service.title}</CardTitle>
+                      <div className="text-2xl font-bold text-[#2C5F8B] mb-2">{service.time}</div>
+                      <CardTitle className="text-gray-800">{service.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p>{service.description}</p>
+                      <p className="text-gray-600">{service.description}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -351,13 +351,13 @@ export default function ChurchHomepage() {
         {/* Ministries Section */}
         <section 
           id="ministries" 
-          className="py-20 bg-muted/30"
+          className="py-20 bg-gray-100/30"
           ref={el => sectionRefs.current['ministries'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Our Ministries</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Our Ministries</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 Find your place to serve and grow within our church community
               </p>
             </div>
@@ -374,13 +374,13 @@ export default function ChurchHomepage() {
                 >
                   <Card className="h-full text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
                     <CardHeader>
-                      <div className="bg-primary/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
+                      <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-[#2C5F8B]">
                         {ministry.icon}
                       </div>
-                      <CardTitle>{ministry.title}</CardTitle>
+                      <CardTitle className="text-[#2C5F8B]">{ministry.title}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-muted-foreground">{ministry.description}</p>
+                      <p className="text-gray-600">{ministry.description}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -392,13 +392,13 @@ export default function ChurchHomepage() {
         {/* Sermons Section */}
         <section 
           id="sermons" 
-          className="py-20"
+          className="py-20 bg-white"
           ref={el => sectionRefs.current['sermons'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Recent Sermons</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Recent Sermons</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 Messages of hope and inspiration from our pastoral team
               </p>
             </div>
@@ -413,17 +413,17 @@ export default function ChurchHomepage() {
                   viewport={{ once: true }}
                 >
                   <Card className="overflow-hidden border-0 shadow-lg">
-                    <div className="h-48 bg-gradient-to-r from-primary/20 to-muted/30 flex items-center justify-center">
-                      <div className="bg-primary/90 text-primary-foreground w-16 h-16 rounded-full flex items-center justify-center">
+                    <div className="h-48 bg-gradient-to-r from-[#2C5F8B]/20 to-gray-100/30 flex items-center justify-center">
+                      <div className="bg-[#2C5F8B] text-white w-16 h-16 rounded-full flex items-center justify-center">
                         <FaPlay size={20} className="ml-1" />
                       </div>
                     </div>
                     <CardHeader>
-                      <CardTitle>The Power of Faith</CardTitle>
-                      <CardDescription>Pastor John Smith • October 15, 2023</CardDescription>
+                      <CardTitle className="text-gray-800">The Power of Faith</CardTitle>
+                      <CardDescription className="text-gray-600">Pastor John Smith • October 15, 2023</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full text-[#2C5F8B] border-[#2C5F8B] hover:bg-[#2C5F8B]/10">
                         <FaPlay size={14} className="mr-2" />
                         Listen Now
                       </Button>
@@ -438,13 +438,13 @@ export default function ChurchHomepage() {
         {/* Events Section */}
         <section 
           id="events" 
-          className="py-20 bg-muted/30"
+          className="py-20 bg-gray-100/30"
           ref={el => sectionRefs.current['events'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Upcoming Events</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Upcoming Events</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 Join us for fellowship and community activities
               </p>
             </div>
@@ -465,14 +465,14 @@ export default function ChurchHomepage() {
                   <Card className="border-0 shadow-lg">
                     <CardContent className="p-6">
                       <div className="flex gap-6">
-                        <div className="flex flex-col items-center justify-center bg-primary/10 text-primary p-4 rounded-lg min-w-[70px]">
+                        <div className="flex flex-col items-center justify-center bg-[#2C5F8B]/10 text-[#2C5F8B] p-4 rounded-lg min-w-[70px]">
                           <span className="text-2xl font-bold">{event.day}</span>
                           <span className="text-sm font-medium">{event.month}</span>
                         </div>
                         <div>
-                          <h3 className="font-serif font-bold text-lg mb-2">{event.title}</h3>
-                          <p className="text-muted-foreground mb-3">{event.desc}</p>
-                          <div className="flex items-center text-sm text-muted-foreground">
+                          <h3 className="font-serif font-bold text-lg mb-2 text-gray-800">{event.title}</h3>
+                          <p className="text-gray-600 mb-3">{event.desc}</p>
+                          <div className="flex items-center text-sm text-gray-600">
                             <FaClock size={14} className="mr-2" />
                             {event.time}
                           </div>
@@ -489,13 +489,13 @@ export default function ChurchHomepage() {
         {/* Contact Section */}
         <section 
           id="contact" 
-          className="py-20"
+          className="py-20 bg-white"
           ref={el => sectionRefs.current['contact'] = el}
         >
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4">Contact Us</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Contact Us</h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
                 We'd love to hear from you and welcome you to our community
               </p>
             </div>
@@ -503,65 +503,65 @@ export default function ChurchHomepage() {
             <div className="grid md:grid-cols-2 gap-12">
               <div className="space-y-8">
                 <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg text-primary">
+                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
                     <FaMapMarkerAlt size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Address</h3>
-                    <p className="text-muted-foreground">1234 Faith Avenue<br />Hopeville, CA 12345</p>
+                    <h3 className="font-bold text-lg mb-1 text-gray-800">Address</h3>
+                    <p className="text-gray-600">1234 Faith Avenue<br />Hopeville, CA 12345</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg text-primary">
+                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
                     <FaPhoneAlt size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Phone</h3>
-                    <p className="text-muted-foreground">(555) 123-4567</p>
+                    <h3 className="font-bold text-lg mb-1 text-gray-800">Phone</h3>
+                    <p className="text-gray-600">(555) 123-4567</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg text-primary">
+                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
                     <FaEnvelope size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Email</h3>
-                    <p className="text-muted-foreground">info@gracechurch.org</p>
+                    <h3 className="font-bold text-lg mb-1 text-gray-800">Email</h3>
+                    <p className="text-gray-600">info@gracechurch.org</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start gap-4">
-                  <div className="bg-primary/10 p-3 rounded-lg text-primary">
+                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
                     <FaClock size={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg mb-1">Service Times</h3>
-                    <p className="text-muted-foreground">Sunday: 8:30 AM & 10:30 AM<br />Wednesday: 6:30 PM</p>
+                    <h3 className="font-bold text-lg mb-1 text-gray-800">Service Times</h3>
+                    <p className="text-gray-600">Sunday: 8:30 AM & 10:30 AM<br />Wednesday: 6:30 PM</p>
                   </div>
                 </div>
               </div>
               
               <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Send us a Message</CardTitle>
+                  <CardTitle className="text-[#2C5F8B]">Send us a Message</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <form className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Your Name</Label>
+                      <Label htmlFor="name" className="text-gray-800">Your Name</Label>
                       <Input id="name" placeholder="John Doe" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Your Email</Label>
+                      <Label htmlFor="email" className="text-gray-800">Your Email</Label>
                       <Input id="email" type="email" placeholder="john@example.com" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="message">Your Message</Label>
+                      <Label htmlFor="message" className="text-gray-800">Your Message</Label>
                       <Textarea id="message" placeholder="How can we help you?" rows={5} />
                     </div>
-                    <Button type="submit" className="w-full">Send Message</Button>
+                    <Button type="submit" className="w-full bg-[#2C5F8B] hover:bg-[#2C5F8B]/90">Send Message</Button>
                   </form>
                 </CardContent>
               </Card>
@@ -570,17 +570,17 @@ export default function ChurchHomepage() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-primary text-primary-foreground py-12">
+        <footer className="bg-[#2C5F8B] text-white py-12">
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-3 gap-8 mb-8">
               <div className="flex flex-col items-center md:items-start">
                 <div className="flex items-center mb-4">
-                  <div className="bg-primary-foreground text-primary w-10 h-10 rounded-md flex items-center justify-center mr-2">
+                  <div className="bg-white text-[#2C5F8B] w-10 h-10 rounded-md flex items-center justify-center mr-2">
                     <FaCross size={20} />
                   </div>
                   <span className="font-bold text-xl font-serif">Grace Community</span>
                 </div>
-                <p className="text-center md:text-left text-primary-foreground/80">
+                <p className="text-center md:text-left text-white/80">
                   A place of worship, community, and spiritual growth since 1952.
                 </p>
               </div>
@@ -590,7 +590,7 @@ export default function ChurchHomepage() {
                   <Button 
                     key={item.id} 
                     variant="link" 
-                    className="text-primary-foreground"
+                    className="text-white hover:text-white/80"
                     onClick={() => scrollToSection(item.id)}
                   >
                     {item.label}
@@ -599,19 +599,19 @@ export default function ChurchHomepage() {
               </div>
               
               <div className="flex justify-center md:justify-end gap-4">
-                <Button variant="secondary" size="icon" className="rounded-full">
+                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
                   <FaFacebookF />
                 </Button>
-                <Button variant="secondary" size="icon" className="rounded-full">
+                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
                   <FaTwitter />
                 </Button>
-                <Button variant="secondary" size="icon" className="rounded-full">
+                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
                   <FaInstagram />
                 </Button>
               </div>
             </div>
             
-            <div className="border-t border-primary-foreground/20 pt-8 text-center text-sm text-primary-foreground/70">
+            <div className="border-t border-white/20 pt-8 text-center text-sm text-white/70">
               <p>&copy; {new Date().getFullYear()} Grace Community Church. All rights reserved.</p>
             </div>
           </div>

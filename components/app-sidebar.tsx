@@ -70,8 +70,8 @@ const adminNavMain: NavItem[] = [
   { title: "User Management", url: "/dashboard/admin/users", icon: IconUserShield },
   { title: "Members", url: "/dashboard/admin/member", icon: IconChartBar },
   { title: "Staffs", url: "/dashboard/admin/staff", icon: IconSettings },
-  { title: "Teams", url: "/dashboard/admin/team", icon: IconUsersGroup },
-  { title: "Events", url: "/dashboard/admin/events", icon: IconGoGame },
+  // { title: "Teams", url: "/dashboard/admin/team", icon: IconUsersGroup },
+  { title: "Events", url: "/dashboard/admin/event", icon: IconGoGame },
 
 ]
 
@@ -128,7 +128,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">
-                  Grace Community Church
+                  Ayat Mekane Yesus Church
                 </span>
               </a>
             </SidebarMenuButton>

@@ -476,7 +476,7 @@ export default function MemberCRUD() {
                       <TableRow key={member.member_id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200">
                         <TableCell>
                           <div className="font-medium">
-                            {member.user?.first_name} {member.user?.last_name}
+                            {member?.first_name} {member?.last_name}
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {member.user?.email}

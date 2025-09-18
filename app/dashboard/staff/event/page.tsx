@@ -34,9 +34,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import  axiosInstance  from '@/lib/axiosInstance';
+import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'sonner';
 import { Controller } from 'react-hook-form';
+import { Calendar, Clock, MapPin, Users, RefreshCw, Activity } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface Event {
   event_id?: number;
@@ -90,17 +93,17 @@ function EventsManagement() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  
+
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<Event>({
     defaultValues: {
-      ministry_id: 0,
+      ministry_id: 1, // Placeholder; replace with valid ministry_id
       team_id: null,
-      title: '',
-      description: '',
-      start_date: '',
-      end_date: null,
-      location: '',
-      recurrence_pattern: '',
+      title: 'Song Night',
+      description: 'Describe your event...',
+      start_date: '2025-09-16',
+      end_date: '2025-09-24',
+      location: 'Enter event location',
+      recurrence_pattern: 'none',
       status: 'Planned'
     }
   });
@@ -117,13 +120,12 @@ function EventsManagement() {
       setLoading(true);
       const [eventsResponse, ministriesResponse, teamsResponse] = await Promise.all([
         axiosInstance.get('/events'),
-        axiosInstance.get('/ministry'), // Assuming you have a ministries endpoint
-        axiosInstance.get('/teams') // Assuming you have a teams endpoint
+        axiosInstance.get('/ministry'),
+        axiosInstance.get('/teams')
       ]);
 
-      // Handle API response structure
-      const eventsData = Array.isArray(eventsResponse.data) 
-        ? eventsResponse.data 
+      const eventsData = Array.isArray(eventsResponse.data)
+        ? eventsResponse.data
         : eventsResponse.data?.data || [];
       setEvents(eventsData);
 
@@ -151,19 +153,20 @@ function EventsManagement() {
     if (editingEvent) {
       reset({
         ...editingEvent,
-        start_date: editingEvent.start_date.split('T')[0] + 'T' + editingEvent.start_date.split('T')[1]?.substring(0, 5),
-        end_date: editingEvent.end_date ? editingEvent.end_date.split('T')[0] + 'T' + editingEvent.end_date.split('T')[1]?.substring(0, 5) : null
+        start_date: editingEvent.start_date.split('T')[0],
+        end_date: editingEvent.end_date ? editingEvent.end_date.split('T')[0] : null,
+        recurrence_pattern: editingEvent.recurrence_pattern || 'none'
       });
     } else {
       reset({
-        ministry_id: 0,
+        ministry_id: 1,
         team_id: null,
-        title: '',
-        description: '',
-        start_date: '',
-        end_date: null,
-        location: '',
-        recurrence_pattern: '',
+        title: 'Song Night',
+        description: 'Describe your event...',
+        start_date: '2025-09-16',
+        end_date: '2025-09-24',
+        location: 'Enter event location',
+        recurrence_pattern: 'none',
         status: 'Planned'
       });
     }
@@ -171,17 +174,20 @@ function EventsManagement() {
 
   const onSubmit = async (data: Event) => {
     try {
+      const submitData = {
+        ...data,
+        recurrence_pattern: data.recurrence_pattern === 'none' ? '' : data.recurrence_pattern
+      };
+
       if (editingEvent) {
-        // Update existing event
-        const response = await axiosInstance.put(`/events/${editingEvent.event_id}`, data);
+        const response = await axiosInstance.put(`/events/${editingEvent.event_id}`, submitData);
         const updatedEvent = response.data.data || response.data;
-        setEvents(prev => prev.map(event => 
+        setEvents(prev => prev.map(event =>
           event.event_id === editingEvent.event_id ? updatedEvent : event
         ));
         toast.success('Event updated successfully');
       } else {
-        // Create new event
-        const response = await axiosInstance.post('/events', data);
+        const response = await axiosInstance.post('/events', submitData);
         const newEvent = response.data.data || response.data;
         setEvents(prev => [...prev, newEvent]);
         toast.success('Event created successfully');
@@ -201,7 +207,7 @@ function EventsManagement() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this event?')) return;
-    
+
     try {
       await axiosInstance.delete(`/events/${id}`);
       setEvents(prev => prev.filter(event => event.event_id !== id));
@@ -246,7 +252,7 @@ function EventsManagement() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-center items-center h-64">
-          <p>Loading events data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
       </div>
     );
@@ -254,247 +260,349 @@ function EventsManagement() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Event Management</h1>
-        <Button onClick={() => setIsModalOpen(true)}>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Event Management
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Create and manage events for your ministries and teams
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <Calendar className="w-4 h-4 mr-2" />
           Create New Event
         </Button>
       </div>
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Ministry</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.length > 0 ? (
-              events.map((event) => (
-                <TableRow key={event.event_id}>
-                  <TableCell>
-                    <div className="font-medium">{event.title}</div>
-                    <div className="text-sm text-muted-foreground truncate max-w-xs">
-                      {event.description}
+      <Card className="border-0 shadow-xl rounded-2xl overflow-hidden">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-gradient-to-r from-muted/50 to-muted/20">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="font-semibold text-foreground/80 py-4">Event Details</TableHead>
+                <TableHead className="font-semibold text-foreground/80 py-4">Ministry</TableHead>
+                <TableHead className="font-semibold text-foreground/80 py-4">Date & Time</TableHead>
+                <TableHead className="font-semibold text-foreground/80 py-4">Location</TableHead>
+                <TableHead className="font-semibold text-foreground/80 py-4">Status</TableHead>
+                <TableHead className="font-semibold text-foreground/80 py-4 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {events.length > 0 ? (
+                events.map((event) => (
+                  <TableRow
+                    key={event.event_id}
+                    className="border-b border-muted/20 hover:bg-muted/10 transition-colors duration-200"
+                  >
+                    <TableCell>
+                      <div className="font-semibold text-foreground">{event.title}</div>
+                      <div className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {event.description || 'No description'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{event.ministry_name}</span>
+                      </div>
+                      {event.team_name && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Team: {event.team_name}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{formatDate(event.start_date)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm">{event.location || 'N/A'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getStatusVariant(event.status)}
+                        className="rounded-full px-3 py-1 font-medium"
+                      >
+                        {event.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(event)}
+                          className="border-primary/20 hover:bg-primary/10 transition-colors"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-destructive/20 hover:bg-destructive/10 text-destructive hover:text-destructive transition-colors"
+                          onClick={() => handleDelete(event.event_id!)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-32 text-center">
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <Calendar className="w-12 h-12 text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground font-medium">No events found</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Create your first event to get started
+                      </p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {event.ministry_name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(event.start_date)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {event.location || 'N/A'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusVariant(event.status)}>
-                      {event.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" onClick={() => handleEdit(event)}>
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => handleDelete(event.event_id!)}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No events found. Create your first event to get started.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
       </Card>
 
       {/* Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md max-h-screen overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingEvent ? 'Edit Event' : 'Create New Event'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                {...register('title', { required: 'Title is required' })}
-              />
-              {errors.title && (
-                <p className="text-sm text-destructive">{errors.title.message}</p>
-              )}
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 border-0">
+          <div className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground p-6">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">
+                {editingEvent ? 'Edit Event' : 'Create New Event'}
+              </DialogTitle>
+              <DialogDescription className="text-primary-foreground/80">
+                {editingEvent ? 'Update your event details' : 'Fill in the details to create a new event'}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+              {/* Left Column */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="font-semibold text-sm">Event Title *</Label>
+                  <Input
+                    id="title"
+                    {...register('title', { required: 'Title is required' })}
+                    className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11"
+                    placeholder="Enter event title"
+                  />
+                  {errors.title && (
+                    <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="font-semibold text-sm">Description</Label>
+                  <Textarea
+                    id="description"
+                    {...register('description')}
+                    rows={4}
+                    className="w-full border-muted-foreground/20 focus:border-primary transition-colors resize-none"
+                    placeholder="Describe your event..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ministry_id" className="font-semibold text-sm">Ministry *</Label>
+                  <Controller
+                    name="ministry_id"
+                    control={control}
+                    rules={{ required: 'Ministry is required' }}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value?.toString()}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                      >
+                        <SelectTrigger className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11">
+                          <SelectValue placeholder="Select Ministry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {ministries.map(ministry => (
+                            <SelectItem key={ministry.ministry_id} value={ministry.ministry_id.toString()}>
+                              {ministry.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.ministry_id && (
+                    <p className="text-sm text-destructive mt-1">{errors.ministry_id.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="team_id" className="font-semibold text-sm">Team</Label>
+                  <Controller
+                    name="team_id"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value === null ? "null" : field.value?.toString()}
+                        onValueChange={(value) => field.onChange(value === "null" ? null : Number(value))}
+                        disabled={!selectedMinistryId || selectedMinistryId === 0}
+                      >
+                        <SelectTrigger className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11">
+                          <SelectValue placeholder="Select Team (Optional)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">No Team</SelectItem>
+                          {getTeamsByMinistry(Number(selectedMinistryId)).map(team => (
+                            <SelectItem key={team.team_id} value={team.team_id.toString()}>
+                              {team.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="start_date" className="font-semibold text-sm">Start Date *</Label>
+                    <Controller
+                      name="start_date"
+                      control={control}
+                      rules={{ required: 'Start date is required' }}
+                      render={({ field }) => (
+                        <DatePicker
+                          selected={field.value ? new Date(field.value) : null}
+                          onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                          dateFormat="yyyy-MM-dd"
+                          className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11 rounded-md px-3"
+                          placeholderText="Select start date"
+                          showPopperArrow={false}
+                          wrapperClassName="w-full"
+                        />
+                      )}
+                    />
+                    {errors.start_date && (
+                      <p className="text-sm text-destructive mt-1">{errors.start_date.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="end_date" className="font-semibold text-sm">End Date</Label>
+                    <Controller
+                      name="end_date"
+                      control={control}
+                      render={({ field }) => (
+                        <DatePicker
+                          selected={field.value ? new Date(field.value) : null}
+                          onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                          dateFormat="yyyy-MM-dd"
+                          className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11 rounded-md px-3"
+                          placeholderText="Select end date"
+                          showPopperArrow={false}
+                          wrapperClassName="w-full"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="font-semibold text-sm">Location</Label>
+                  <Input
+                    id="location"
+                    type="text"
+                    {...register('location')}
+                    className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11"
+                    placeholder="Enter event location"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="recurrence_pattern" className="font-semibold text-sm">Recurrence Pattern</Label>
+                  <Controller
+                    name="recurrence_pattern"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value || "none"}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11">
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="w-4 h-4" />
+                            <SelectValue placeholder="None" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="Daily">Daily</SelectItem>
+                          <SelectItem value="Weekly">Weekly</SelectItem>
+                          <SelectItem value="Monthly">Monthly</SelectItem>
+                          <SelectItem value="Quarterly">Quarterly</SelectItem>
+                          <SelectItem value="Yearly">Yearly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="font-semibold text-sm">Status</Label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="w-full border-muted-foreground/20 focus:border-primary transition-colors h-11">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-4 h-4" />
+                            <SelectValue placeholder="Select Status" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Planned">Planned</SelectItem>
+                          <SelectItem value="Active">Active</SelectItem>
+                          <SelectItem value="Cancelled">Cancelled</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                {...register('description')}
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="ministry_id">Ministry *</Label>
-              <Controller
-                name="ministry_id"
-                control={control}
-                rules={{ required: 'Ministry is required' }}
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString() || ''}
-                    onValueChange={(value) => field.onChange(Number(value))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Ministry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ministries.map(ministry => (
-                        <SelectItem key={ministry.ministry_id} value={ministry.ministry_id.toString()}>
-                          {ministry.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.ministry_id && (
-                <p className="text-sm text-destructive">{errors.ministry_id.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="team_id">Team</Label>
-              <Controller
-                name="team_id"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value?.toString() || ''}
-                    onValueChange={(value) => field.onChange(value ? Number(value) : null)}
-                    disabled={!selectedMinistryId || selectedMinistryId === 0}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Team (Optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Select Team (Optional)</SelectItem>
-                      {getTeamsByMinistry(Number(selectedMinistryId)).map(team => (
-                        <SelectItem key={team.team_id} value={team.team_id.toString()}>
-                          {team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="start_date">Start Date *</Label>
-              <Input
-                id="start_date"
-                type="datetime-local"
-                {...register('start_date', { required: 'Start date is required' })}
-              />
-              {errors.start_date && (
-                <p className="text-sm text-destructive">{errors.start_date.message}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="end_date">End Date</Label>
-              <Input
-                id="end_date"
-                type="datetime-local"
-                {...register('end_date')}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                type="text"
-                {...register('location')}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="recurrence_pattern">Recurrence Pattern</Label>
-              <Controller
-                name="recurrence_pattern"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value || ''}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="None" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      <SelectItem value="Daily">Daily</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                      <SelectItem value="Quarterly">Quarterly</SelectItem>
-                      <SelectItem value="Yearly">Yearly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Controller
-                name="status"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Planned">Planned</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-            
-            <DialogFooter>
+
+            <DialogFooter className="border-t pt-6">
               <Button
                 type="button"
                 variant="outline"
                 onClick={closeModal}
+                className="border-muted-foreground/20 hover:bg-muted/10 transition-colors h-11 px-6"
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingEvent ? 'Update' : 'Create'} Event
+              <Button
+                type="submit"
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary transition-all duration-300 shadow-lg hover:shadow-xl h-11 px-8"
+              >
+                {editingEvent ? 'Update Event' : 'Create Event'}
               </Button>
             </DialogFooter>
           </form>

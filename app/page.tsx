@@ -1,622 +1,265 @@
-// pages/index.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
-import { 
-  FaHome, FaInfoCircle, FaChurch, FaUsers, 
+import {
+  FaHome, FaInfoCircle, FaChurch, FaUsers,
   FaBook, FaCalendarAlt, FaPhoneAlt, FaArrowDown,
   FaPlay, FaMapMarkerAlt, FaClock, FaEnvelope,
   FaFacebookF, FaTwitter, FaInstagram, FaCross,
-  FaHeart, FaPray, FaHandsHelping
+  FaHeart, FaPray,
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Toaster, toast } from 'react-hot-toast';
+import axiosInstance from '@/lib/axios';
 
-export default function ChurchHomepage() {
-  const [activeSection, setActiveSection] = useState('home');
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const sectionRefs = useRef({});
+export default function HomePage() {
+  const [ministries, setMinistries] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
 
-  const navItems = [
-    { id: 'home', label: 'Home', icon: <FaHome size={18} /> },
-    { id: 'about', label: 'About', icon: <FaInfoCircle size={18} /> },
-    { id: 'services', label: 'Services', icon: <FaChurch size={18} /> },
-    { id: 'ministries', label: 'Ministries', icon: <FaUsers size={18} /> },
-    { id: 'sermons', label: 'Sermons', icon: <FaBook size={18} /> },
-    { id: 'events', label: 'Events', icon: <FaCalendarAlt size={18} /> },
-    { id: 'contact', label: 'Contact', icon: <FaPhoneAlt size={18} /> },
-  ];
-
-  const services = [
-    {
-      time: '8:30 AM',
-      title: 'Traditional Service',
-      description: 'A classic worship experience with hymns and liturgy'
-    },
-    {
-      time: '10:30 AM',
-      title: 'Contemporary Service',
-      description: 'Modern worship with a full band and relevant message'
-    },
-    {
-      time: '6:30 PM',
-      title: 'Evening Prayer',
-      description: 'A quiet reflective service for midweek renewal'
-    }
-  ];
-
-  const ministries = [
-    {
-      title: 'Children\'s Ministry',
-      description: 'Engaging programs for kids to learn about faith',
-      icon: <FaHeart size={30} />
-    },
-    {
-      title: 'Youth Group',
-      description: 'A community for teens to grow in faith',
-      icon: <FaUsers size={30} />
-    },
-    {
-      title: 'Men\'s Fellowship',
-      description: 'Brotherhood and spiritual growth',
-      icon: <FaHandsHelping size={30} />
-    },
-    {
-      title: 'Women\'s Circle',
-      description: 'Support, study and service for women',
-      icon: <FaPray size={30} />
-    }
-  ];
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-      
-      const scrollPosition = window.scrollY + 100;
-      
-      for (const [sectionId, ref] of Object.entries(sectionRefs.current)) {
-        if (ref) {
-          const offsetTop = ref.offsetTop;
-          const offsetBottom = offsetTop + ref.offsetHeight;
-          
-          if (scrollPosition >= offsetTop && scrollPosition < offsetBottom) {
-            setActiveSection(sectionId);
-            break;
-          }
-        }
+    const fetchMinistries = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axiosInstance.get('ministry');
+        const ministriesData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+
+        setMinistries(
+          ministriesData.map((ministry: any) => ({
+            title: ministry.name,
+            description: ministry.description,
+            icon: getMinistryIcon(ministry.name),
+          }))
+        );
+      } catch (error) {
+        console.error('Error fetching ministries:', error);
+        toast.error('Failed to load ministries. Displaying sample data.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const fetchEvents = async () => {
+      try {
+        const response = await axiosInstance.get('events');
+        const eventsData = Array.isArray(response.data)
+          ? response.data
+          : response.data?.data || [];
+        setEvents(eventsData);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        toast.error('Failed to load upcoming events.');
+      }
+    };
+
+    fetchMinistries();
+    fetchEvents();
   }, []);
 
-  const scrollToSection = (sectionId) => {
-    setIsMobileMenuOpen(false);
-    const section = sectionRefs.current[sectionId];
-    if (section) {
-      window.scrollTo({
-        top: section.offsetTop - 80,
-        behavior: 'smooth'
-      });
+  const getMinistryIcon = (name: string) => {
+    switch (name.toLowerCase()) {
+      case 'pastoral ministry': return <FaCross className="text-4xl text-blue-600" />;
+      case 'worship ministry': return <FaPray className="text-4xl text-purple-600" />;
+      case 'youth ministry': return <FaUsers className="text-4xl text-green-600" />;
+      case 'outreach ministry': return <FaHeart className="text-4xl text-red-600" />;
+      default: return <FaChurch className="text-4xl text-gray-600" />;
     }
+  };
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const scrollToSection = (section: string) => {
+    sectionRefs.current[section]?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const getYouTubeId = (url = '') => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2]?.length === 11 ? match[2] : null;
   };
 
   return (
     <>
       <Head>
-        <title>Grace Community Church</title>
-        <meta name="description" content="Welcome to Grace Community Church" />
-        <link rel="icon" href="/favicon.ico" />
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <title>Church Management System</title>
+        <meta
+          name="description"
+          content="Welcome to our Church Management System. Stay connected with ministries, events, and more."
+        />
       </Head>
+      <Toaster position="top-right" />
 
-      <div className="min-h-screen w-full overflow-x-hidden">
-        {/* Navigation Bar */}
-        <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-2 shadow-sm' : 'py-4 bg-white'}`}>
-          <div className="container mx-auto px-4 flex justify-between items-center">
-            <motion.div 
-              className="flex items-center cursor-pointer"
-              onClick={() => scrollToSection('home')}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="bg-[#2C5F8B] text-white w-10 h-10 rounded-md flex items-center justify-center mr-2">
-                <FaCross size={20} />
-              </div>
-              <span className="font-bold text-xl font-serif text-[#2C5F8B]">Grace Community</span>
-            </motion.div>
-            
-            <div className="hidden md:flex items-center space-x-1">
-              {navItems.map(item => (
-                <Button
-                  key={item.id}
-                  variant={activeSection === item.id ? "secondary" : "ghost"}
-                  className={`flex flex-col items-center h-14 px-3 ${activeSection === item.id ? 'bg-[#2C5F8B]/10 text-[#2C5F8B]' : 'text-gray-600 hover:text-[#2C5F8B]'}`}
-                  onClick={() => scrollToSection(item.id)}
-                >
-                  <span className="mb-1">{item.icon}</span>
-                  <span className="text-xs">{item.label}</span>
-                </Button>
-              ))}
-            </div>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="md:hidden text-gray-600"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              <div className="space-y-1.5">
-                <span className={`block h-0.5 w-6 bg-current transition-all ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
-                <span className={`block h-0.5 w-6 bg-current ${isMobileMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-                <span className={`block h-0.5 w-6 bg-current transition-all ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
-              </div>
+      {/* Hero Section */}
+      <section
+        ref={el => (sectionRefs.current['home'] = el)}
+        className="relative h-screen flex items-center justify-center bg-black text-white"
+      >
+        <video
+          ref={videoRef}
+          autoPlay
+          loop
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+          poster="/video-poster.jpg"
+        >
+          <source src="/background-video.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col items-center justify-center text-center px-4">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">Welcome to Our Church</h1>
+          <p className="text-lg md:text-2xl mb-8">
+            Join us in worship, fellowship, and ministry.
+          </p>
+          <div className="flex space-x-4">
+            <Button onClick={() => scrollToSection('about')} className="bg-blue-600 hover:bg-blue-700">
+              Learn More
+            </Button>
+            <Button onClick={toggleMute} className="bg-gray-800 hover:bg-gray-900">
+              {isMuted ? 'Unmute Video' : 'Mute Video'}
             </Button>
           </div>
-        </nav>
+        </div>
+        <div className="absolute bottom-8 flex justify-center w-full">
+          <FaArrowDown
+            className="text-white text-3xl animate-bounce cursor-pointer"
+            onClick={() => scrollToSection('about')}
+          />
+        </div>
+      </section>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div 
-              className="fixed top-16 inset-x-0 bg-white/95 backdrop-blur-lg supports-[backdrop-filter]:bg-white/60 z-40 md:hidden"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="container mx-auto px-4 py-4">
-                <div className="grid gap-2">
-                  {navItems.map(item => (
-                    <Button
-                      key={item.id}
-                      variant={activeSection === item.id ? "secondary" : "ghost"}
-                      className={`justify-start ${activeSection === item.id ? 'bg-[#2C5F8B]/10 text-[#2C5F8B]' : 'text-gray-600'}`}
-                      onClick={() => scrollToSection(item.id)}
-                    >
-                      <span className="mr-2">{item.icon}</span>
-                      {item.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Hero Section */}
-        <section 
-          id="home" 
-          className="min-h-screen flex items-center justify-center relative bg-gradient-to-br from-white to-gray-100/50"
-          ref={el => sectionRefs.current['home'] = el}
-        >
-          <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
-          
-          <div className="container mx-auto px-4 text-center z-10">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="text-[#2C5F8B] font-serif font-bold text-xl mb-4">Grace Community Church</div>
-              <h1 className="text-4xl md:text-6xl font-serif font-bold mb-6 text-gray-800">Welcome to Our Spiritual Home</h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-                Where faith, community, and love come together in worship
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-[#2C5F8B] hover:bg-[#2C5F8B]/90" onClick={() => scrollToSection('services')}>
-                  Join Us for Service
-                </Button>
-                <Button variant="outline" size="lg" className="text-[#2C5F8B] border-[#2C5F8B] hover:bg-[#2C5F8B]/10" onClick={() => scrollToSection('about')}>
-                  Learn More
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div 
-            className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center text-gray-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1, y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <span className="text-sm mb-2">Scroll Down</span>
-            <FaArrowDown />
-          </motion.div>
-        </section>
-
-        {/* About Section */}
-        <section 
-          id="about" 
-          className="py-20 bg-gray-100/30"
-          ref={el => sectionRefs.current['about'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">About Our Church</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                A community of faith, hope, and love serving together since 1952
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full text-center border-0 shadow-lg">
-                  <CardHeader>
-                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaCross size={24} className="text-[#2C5F8B]" />
-                    </div>
-                    <CardTitle className="text-[#2C5F8B]">Our Mission</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">To spread the love of Christ, nurture spiritual growth, and serve our community with compassion and grace.</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full text-center border-0 shadow-lg">
-                  <CardHeader>
-                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaBook size={24} className="text-[#2C5F8B]" />
-                    </div>
-                    <CardTitle className="text-[#2C5F8B]">Our History</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">Founded in 1952, Grace Community Church has been a cornerstone of faith in our community for generations.</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full text-center border-0 shadow-lg">
-                  <CardHeader>
-                    <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <FaChurch size={24} className="text-[#2C5F8B]" />
-                    </div>
-                    <CardTitle className="text-[#2C5F8B]">Our Beliefs</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600">We believe in the Holy Trinity, salvation through Jesus Christ, the power of prayer, and the importance of community.</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Services Section */}
-        <section 
-          id="services" 
-          className="py-20 bg-white"
-          ref={el => sectionRefs.current['services'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Worship Services</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Join us for worship and fellowship throughout the week
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {services.map((service, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="h-full text-center border-0 shadow-lg relative overflow-hidden">
-                    <div className="absolute top-4 right-4 bg-[#2C5F8B] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md">
-                      <FaChurch size={18} />
-                    </div>
-                    <CardHeader>
-                      <div className="text-2xl font-bold text-[#2C5F8B] mb-2">{service.time}</div>
-                      <CardTitle className="text-gray-800">{service.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">{service.description}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Ministries Section */}
-        <section 
-          id="ministries" 
-          className="py-20 bg-gray-100/30"
-          ref={el => sectionRefs.current['ministries'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Our Ministries</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Find your place to serve and grow within our church community
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {ministries.map((ministry, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  whileHover={{ y: -5 }}
-                >
-                  <Card className="h-full text-center border-0 shadow-lg hover:shadow-xl transition-shadow">
-                    <CardHeader>
-                      <div className="bg-[#2C5F8B]/10 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-[#2C5F8B]">
-                        {ministry.icon}
-                      </div>
-                      <CardTitle className="text-[#2C5F8B]">{ministry.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-600">{ministry.description}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Sermons Section */}
-        <section 
-          id="sermons" 
-          className="py-20 bg-white"
-          ref={el => sectionRefs.current['sermons'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Recent Sermons</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Messages of hope and inspiration from our pastoral team
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {[1, 2, 3].map((item, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="overflow-hidden border-0 shadow-lg">
-                    <div className="h-48 bg-gradient-to-r from-[#2C5F8B]/20 to-gray-100/30 flex items-center justify-center">
-                      <div className="bg-[#2C5F8B] text-white w-16 h-16 rounded-full flex items-center justify-center">
-                        <FaPlay size={20} className="ml-1" />
-                      </div>
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-gray-800">The Power of Faith</CardTitle>
-                      <CardDescription className="text-gray-600">Pastor John Smith • October 15, 2023</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button variant="outline" className="w-full text-[#2C5F8B] border-[#2C5F8B] hover:bg-[#2C5F8B]/10">
-                        <FaPlay size={14} className="mr-2" />
-                        Listen Now
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Events Section */}
-        <section 
-          id="events" 
-          className="py-20 bg-gray-100/30"
-          ref={el => sectionRefs.current['events'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Upcoming Events</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                Join us for fellowship and community activities
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { day: '24', month: 'NOV', title: 'Community Thanksgiving Dinner', desc: 'Join us for our annual Thanksgiving dinner. All are welcome for food, fellowship, and gratitude.', time: '4:00 PM - 7:00 PM' },
-                { day: '12', month: 'NOV', title: 'Youth Group Fall Retreat', desc: 'A weekend of fun, faith, and fellowship for our youth members.', time: 'All Day' },
-                { day: '05', month: 'DEC', title: 'Christmas Choir Rehearsal', desc: 'Practice for our annual Christmas celebration concert.', time: '7:00 PM - 9:00 PM' }
-              ].map((event, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card className="border-0 shadow-lg">
-                    <CardContent className="p-6">
-                      <div className="flex gap-6">
-                        <div className="flex flex-col items-center justify-center bg-[#2C5F8B]/10 text-[#2C5F8B] p-4 rounded-lg min-w-[70px]">
-                          <span className="text-2xl font-bold">{event.day}</span>
-                          <span className="text-sm font-medium">{event.month}</span>
-                        </div>
-                        <div>
-                          <h3 className="font-serif font-bold text-lg mb-2 text-gray-800">{event.title}</h3>
-                          <p className="text-gray-600 mb-3">{event.desc}</p>
-                          <div className="flex items-center text-sm text-gray-600">
-                            <FaClock size={14} className="mr-2" />
-                            {event.time}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section 
-          id="contact" 
-          className="py-20 bg-white"
-          ref={el => sectionRefs.current['contact'] = el}
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-serif font-bold mb-4 text-gray-800">Contact Us</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                We'd love to hear from you and welcome you to our community
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-12">
-              <div className="space-y-8">
-                <div className="flex items-start gap-4">
-                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
-                    <FaMapMarkerAlt size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-gray-800">Address</h3>
-                    <p className="text-gray-600">1234 Faith Avenue<br />Hopeville, CA 12345</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
-                    <FaPhoneAlt size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-gray-800">Phone</h3>
-                    <p className="text-gray-600">(555) 123-4567</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
-                    <FaEnvelope size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-gray-800">Email</h3>
-                    <p className="text-gray-600">info@gracechurch.org</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4">
-                  <div className="bg-[#2C5F8B]/10 p-3 rounded-lg text-[#2C5F8B]">
-                    <FaClock size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg mb-1 text-gray-800">Service Times</h3>
-                    <p className="text-gray-600">Sunday: 8:30 AM & 10:30 AM<br />Wednesday: 6:30 PM</p>
-                  </div>
-                </div>
-              </div>
-              
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-[#2C5F8B]">Send us a Message</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-gray-800">Your Name</Label>
-                      <Input id="name" placeholder="John Doe" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-gray-800">Your Email</Label>
-                      <Input id="email" type="email" placeholder="john@example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message" className="text-gray-800">Your Message</Label>
-                      <Textarea id="message" placeholder="How can we help you?" rows={5} />
-                    </div>
-                    <Button type="submit" className="w-full bg-[#2C5F8B] hover:bg-[#2C5F8B]/90">Send Message</Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="bg-[#2C5F8B] text-white py-12">
-          <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-3 gap-8 mb-8">
-              <div className="flex flex-col items-center md:items-start">
-                <div className="flex items-center mb-4">
-                  <div className="bg-white text-[#2C5F8B] w-10 h-10 rounded-md flex items-center justify-center mr-2">
-                    <FaCross size={20} />
-                  </div>
-                  <span className="font-bold text-xl font-serif">Grace Community</span>
-                </div>
-                <p className="text-center md:text-left text-white/80">
-                  A place of worship, community, and spiritual growth since 1952.
+      {/* About Section */}
+      <section
+        ref={el => (sectionRefs.current['about'] = el)}
+        className="py-20 px-4 bg-gray-100"
+      >
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-6">About Us</h2>
+          <p className="text-lg text-gray-700 mb-8">
+            Our church is a community of believers committed to following Christ and serving
+            others through various ministries and outreach programs.
+          </p>
+          <div className="grid md:grid-cols-2 gap-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Our Mission</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  To glorify God by making disciples of all nations, sharing His love, and
+                  serving our community.
                 </p>
-              </div>
-              
-              <div className="flex flex-wrap justify-center gap-6 md:gap-8">
-                {navItems.map(item => (
-                  <Button 
-                    key={item.id} 
-                    variant="link" 
-                    className="text-white hover:text-white/80"
-                    onClick={() => scrollToSection(item.id)}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
-              
-              <div className="flex justify-center md:justify-end gap-4">
-                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
-                  <FaFacebookF />
-                </Button>
-                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
-                  <FaTwitter />
-                </Button>
-                <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white hover:bg-white/30">
-                  <FaInstagram />
-                </Button>
-              </div>
-            </div>
-            
-            <div className="border-t border-white/20 pt-8 text-center text-sm text-white/70">
-              <p>&copy; {new Date().getFullYear()} Grace Community Church. All rights reserved.</p>
-            </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Our Vision</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>
+                  To be a Christ-centered community growing in faith, hope, and love, impacting
+                  the world for Christ.
+                </p>
+              </CardContent>
+            </Card>
           </div>
-        </footer>
-      </div>
+        </div>
+      </section>
+
+      {/* Ministries Section */}
+      <section
+        ref={el => (sectionRefs.current['ministries'] = el)}
+        className="py-20 px-4 bg-white"
+      >
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-12">Our Ministries</h2>
+          {isLoading ? (
+            <p>Loading ministries...</p>
+          ) : ministries.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {ministries.map((ministry, index) => (
+                <Card key={index} className="hover:shadow-xl transition-shadow">
+                  <CardHeader>
+                    <div className="flex justify-center mb-4">{ministry.icon}</div>
+                    <CardTitle>{ministry.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{ministry.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p>No ministries available at the moment.</p>
+          )}
+        </div>
+      </section>
+
+      {/* Events Section */}
+      <section
+        ref={el => (sectionRefs.current['events'] = el)}
+        className="py-20 px-4 bg-gray-100"
+      >
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-4xl font-bold mb-12">Upcoming Events</h2>
+          {events.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map(event => (
+                <Card key={event.id} className="hover:shadow-xl transition-shadow">
+                  <CardHeader>
+                    <CardTitle>{event.title}</CardTitle>
+                    <CardDescription>
+                      {new Date(event.start_date).toLocaleDateString()} -{' '}
+                      {new Date(event.end_date).toLocaleDateString()}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{event.description}</p>
+                    <div className="flex items-center mt-4 text-sm text-gray-600">
+                      <FaMapMarkerAlt className="mr-2" />
+                      {event.location}
+                    </div>
+                    <div className="flex items-center mt-2 text-sm text-gray-600">
+                      <FaClock className="mr-2" />
+                      {new Date(event.start_date).toLocaleTimeString()}
+                    </div>
+                    {event.video_url && getYouTubeId(event.video_url) && (
+                      <div className="mt-4">
+                        <iframe
+                          width="100%"
+                          height="200"
+                          src={`https://www.youtube.com/embed/${getYouTubeId(event.video_url)}`}
+                          title={event.title}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p>No upcoming events at this time.</p>
+          )}
+        </div>
+      </section>
     </>
   );
 }

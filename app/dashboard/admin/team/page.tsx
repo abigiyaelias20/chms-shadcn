@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import axiosInstance from '@/lib/axiosInstance';
+import { Button } from '@/components/ui/button';
 
 // Type definitions
 interface Ministry {
@@ -59,7 +60,7 @@ function MinistryTeamCRUD() {
       try {
         setLoading(true);
         // Fetch teams
-        const teamsResponse = await axiosInstance.get('/ministry-teams');
+        const teamsResponse = await axiosInstance.get('teams');
         setTeams(teamsResponse.data);
 
         // Fetch ministries (assuming an endpoint exists; adjust if necessary)
